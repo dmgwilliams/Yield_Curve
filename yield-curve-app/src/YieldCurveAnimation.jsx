@@ -211,6 +211,8 @@ export default function YieldCurveAnimation() {
 
   const year = currentData.date.substring(0, 4);
   const isInverted = spread2s10s < 0;
+  const treasuryIsLive = dataSource === "live";
+  const marketIsEmbedded = true;
 
   return (
     <div ref={containerRef} style={{
@@ -276,6 +278,39 @@ export default function YieldCurveAnimation() {
           transition: "color 0.3s"
         }}>
           {currentData.label}
+        </span>
+      </div>
+
+      <div style={{
+        display: "flex",
+        gap: "8px",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        marginBottom: "10px"
+      }}>
+        <span style={{
+          border: `1px solid ${treasuryIsLive ? "#00e676" : "#ffc107"}`,
+          color: treasuryIsLive ? "#00e676" : "#ffc107",
+          background: "#11172a",
+          borderRadius: "999px",
+          padding: "4px 10px",
+          fontSize: "10px",
+          letterSpacing: "0.4px",
+          fontFamily: "'JetBrains Mono', monospace"
+        }}>
+          TREASURY: {treasuryIsLive ? "LIVE API" : "EMBEDDED FALLBACK"}
+        </span>
+        <span style={{
+          border: "1px solid #64b5f6",
+          color: "#64b5f6",
+          background: "#11172a",
+          borderRadius: "999px",
+          padding: "4px 10px",
+          fontSize: "10px",
+          letterSpacing: "0.4px",
+          fontFamily: "'JetBrains Mono', monospace"
+        }}>
+          MARKET: {marketIsEmbedded ? "EMBEDDED SNAPSHOT" : "LIVE API"}
         </span>
       </div>
 
@@ -735,12 +770,16 @@ export default function YieldCurveAnimation() {
         color: "#444",
         textAlign: "center"
       }}>
-        Source: U.S. Department of the Treasury &middot; Daily Par Yield Curve Rates (CMT)
-        {dataSource === "live" ? (
-          <span style={{ color: "#00e676" }}> &middot; LIVE DATA ({yieldData.length} weeks)</span>
-        ) : (
-          <span style={{ color: "#ffc107" }}> &middot; CACHED DATA (Jan 2020 – Feb 2026)</span>
-        )}
+        Source status &middot;
+        <span style={{ color: treasuryIsLive ? "#00e676" : "#ffc107" }}>
+          {` Treasury: ${treasuryIsLive ? "Live API" : "Embedded fallback"}`}
+        </span>
+        <span style={{ color: "#64b5f6" }}>
+          {" · Market: Embedded snapshot"}
+        </span>
+        <span style={{ color: "#666" }}>
+          {` · Treasury rows: ${yieldData.length}`}
+        </span>
       </div>
     </div>
   );
