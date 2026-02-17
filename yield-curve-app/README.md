@@ -69,3 +69,42 @@ yield-curve-app/
 ├── vercel.json            # Vercel deployment config
 └── README.md
 ```
+
+## Newcomer Onboarding Guide
+
+### Mental model (30 seconds)
+This project is a **single-page React app** that draws and animates the U.S. Treasury yield curve over time. Data comes from two serverless API routes under `api/`:
+- `/api/yields` for Treasury curve history (weekly snapshots)
+- `/api/market` for market price history (SPY/QQQ/BTC/ETH)
+
+At runtime, the front end tries live API data first and falls back to embedded historical data if needed.
+
+### Key files to read first
+1. `src/main.jsx` — app entrypoint that mounts one root component.
+2. `src/YieldCurveAnimation.jsx` — almost all UI, animation state, rendering, and data fetch logic.
+3. `api/yields.js` — ingestion/parsing/cleanup pipeline for Treasury CSV data.
+4. `api/market.js` — Yahoo Finance fetcher used for market overlays.
+
+### Data flow and responsibilities
+- **Serverless layer (`api/`)**
+  - Fetches raw external data.
+  - Normalizes dates and values.
+  - Handles resilience concerns (retry/fallback endpoint for Yahoo, partial-year failures, cache headers).
+- **Client layer (`src/`)**
+  - Requests processed data from `/api/yields`.
+  - Chooses `live` vs `fallback` source.
+  - Runs requestAnimationFrame-based playback.
+  - Computes chart/scales/spreads and renders all visual elements.
+
+### Important implementation details
+- The chart currently uses a **single large component** (`YieldCurveAnimation.jsx`) with colocated helper logic and embedded fallback data.
+- Weekly sampling happens in the API (`pickWeekly`) so the browser animates a smaller, cleaner sequence.
+- Missing tenor values are interpolated in `parseCSV`, which is a critical data-quality assumption.
+- The app is optimized for serverless hosting (Vercel cache headers + rewrites in `vercel.json`).
+
+### Suggested learning path (next steps)
+1. Run locally with `npm install` then `npm run dev`; interact with timeline/playback controls.
+2. Trace one request end-to-end: `YieldCurveAnimation.jsx` -> `/api/yields` -> `parseCSV` -> `pickWeekly` -> rendered frame.
+3. Add a small feature (for example, a new spread metric) to learn where computed metrics belong.
+4. Refactor a thin slice out of `YieldCurveAnimation.jsx` (e.g., scales/utilities) to reduce component size safely.
+5. Add tests around API parsing/sampling behavior since those transformations are the highest-leverage logic.
